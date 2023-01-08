@@ -10,7 +10,7 @@ print(data)
 rows=[]
 all_data_list=[]
 levels = ['dis','mid','pro']
-for level in ['dis','mid','pro']:
+for level in levels:
     for cat in ['con','inj']:
         data = pd.read_excel('outputclean4.xlsx',sheet_name=level +'_' + cat)
         data['category']=cat
@@ -40,7 +40,6 @@ def twoway_anova(data_raw):
         mclong=multicomp.MultiComparison(data['p'],data['category'])
         print('MCLON: ',mclong.tukeyhsd())
         anova_results.append(result)
-        data_p = data.set_index('p')
         data = data.reset_index()[['perc_l','p','category']].dropna()
         print(data)
         print("p ",data.p)
