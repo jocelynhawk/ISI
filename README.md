@@ -12,8 +12,8 @@ Features
 Dependencies
 --------
 
-The Pandas library is required for the programs to work
-- http://pandas.org/releases.html
+- Pandas
+- NumPy
 
 Usage
 --------
