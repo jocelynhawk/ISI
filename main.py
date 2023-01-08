@@ -136,25 +136,7 @@ class trial_data:
                 marker0 = self.marker_xyz[level + str(i)][0]
                 marker1 = self.marker_xyz[level + str(i+1)][0]
                 d = np.linalg.norm(marker0-marker1)
-                if self.folder=='Sub0' and level=='pro':
-                    if i==2:
-                      category = 'injection'  
-                elif self.folder=='Sub2' and level=='pro':
-                    if i==4:
-                       category = 'injection'  
-                elif self.folder=='Sub3' and level=='pro':
-                    if i==4:
-                        category = 'injection' 
-                elif self.folder=='Sub3' and level=='dis':
-                    if i==4:
-                        category = 'injection'  
-                elif self.folder=='Sub4' and level=='mid':
-                    if i==4:
-                        category = 'injection'
-                elif self.folder=='Sub5' and level=='pro':
-                    if i==1:
-                        category = 'injection'  
-                elif i==3:
+                if i==3:
                     category = 'injection'
                 dists.append([level,d,str(i)+str(i+1),category,self.p])
         
@@ -179,41 +161,15 @@ def calc_strain(baseline,data1,folder):
             #set category and pressure
             category=baseline.loc[(level,markers),'category']
             p=data1.loc[(level,markers),'p']
-            check='ok'
-            if category == 'control':
-                if elong >0.01 or elong<-0.005:
-                    check = 'bad'
-            else:
-                if elong<0 or elong>0.09:
-                    check = 'bad'
             if math.isnan(elong)==True:
                 continue
-            elongs.append([level,elong,markers,category,p,folder,check])
+            elongs.append([level,elong,markers,category,p,folder])
 
     #add calculated distances to dataframe and set indices to level, category, and pressure
-    perc_elong = pd.DataFrame(elongs,columns=['level','perc_l','markers','category','p','specimen','check'])
+    perc_elong = pd.DataFrame(elongs,columns=['level','perc_l','markers','category','p','specimen'])
     #perc_elong = perc_elong.set_index(['specimen','level','category','p',]).sort_index() 
     return perc_elong
-
-def remove_outliers(data):
-    pressures=[30,60,90,120,150,180,210]
-    to_drop=[]
-    for level in levels:
-        for p in pressures:
-            for cat in ['control','injection']:
-                elongs = data.loc[('ok',level,cat,p),'perc_l']
-                avg=elongs.mean()
-                std=elongs.std()
-                print('avg: ',avg)
-                print('std: ',std)
-                print(level,p,cat)
-                for val in elongs:
-                    if abs(val-avg)>std/2 and abs(val-avg)>0.01:
-                        to_drop.append((level,cat,p,val))
-                        #data.drop(index=(level,cat,p,))
-
-    return to_drop
-                        
+                      
 
 
 #name of folder where each specimen folder is stored
@@ -227,44 +183,13 @@ for folder in folders:
     specimens.append(specimen(folder).perc_elongs)
 total_data = pd.concat(specimens)
 all_data = total_data.set_index(['specimen','level','markers','p',]).sort_index()
-todrop = remove_outliers(total_data.set_index(['check','level','category','p',]).sort_index())
-clean_data = total_data.set_index(['level','category','p','perc_l']).sort_index()
-clean_data = clean_data.drop(index=todrop)
-clean_data = clean_data.reset_index()
-clean_data = total_data.set_index(['check','level','category','specimen','p']).sort_index()
-checkbad_data = total_data.set_index(['check','specimen','level','markers','p']).sort_index()
-good_data = total_data.set_index(['check','specimen','level','category','p']).sort_index()
-
 print(all_data)
-
 
 #Write data into excel file, separating by level and category
-"""with pd.ExcelWriter('output13.xlsx',engine='xlsxwriter') as writer: 
-    for folder in folders:
-        for level in levels:
-            try:
-                all_data.loc[(folder,level)].to_excel(writer, sheet_name=folder + '_' + level,encoding='utf-8')
-            except:
-                continue"""
-
-with pd.ExcelWriter('outputclean4.xlsx',engine='xlsxwriter') as writer:  
+with pd.ExcelWriter('Results.xlsx',engine='xlsxwriter') as writer:  
     for level in levels:
         for cat in ['control','injection']:
-            clean_data.loc[('ok',level,cat)].to_excel(writer, sheet_name=level + '_' + cat[0:3],encoding='utf-8')
-
-"""with pd.ExcelWriter('good_data9.xlsx',engine='xlsxwriter') as writer:  
-    for level in levels:
-        for cat in ['control','injection']:
-            good_data.loc[('ok',slice(None),level,cat)].to_excel(writer, sheet_name=level + '_' + cat[0:3],encoding='utf-8')
-
-print(all_data)
-with pd.ExcelWriter('badvals9.xlsx',engine='xlsxwriter') as writer:  
-    for folder in folders:
-        checkbad_data.loc[('bad',folder)].to_excel(writer, sheet_name=folder,encoding='utf-8')
-"""
-
-
-
+            all_data.loc[('ok',level,cat)].to_excel(writer, sheet_name=level + '_' + cat[0:3],encoding='utf-8')
 
 
             
